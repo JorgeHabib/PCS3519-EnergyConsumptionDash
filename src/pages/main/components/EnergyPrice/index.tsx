@@ -1,8 +1,23 @@
 import { Text, styled } from "@punto-ui/react"
 import { CurrencyDollarIcon } from '@heroicons/react/24/outline'
 import { Flex } from "@/components"
+import { useAuth } from "@/contexts/hooks"
 
 export const EnergyPrice = () => {
+  const { content } = useAuth()
+
+  // Last KWH content
+  const totalConsumption = content.length ? content[content.length - 1].KWHT : 0
+  const total = totalConsumption * 0.8
+  const formatted = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(+total)
+  const totalFormatted = new Intl.NumberFormat('pt-BR', {
+    currency: 'BRL',
+  }).format(+totalConsumption)
+
+
   return (
     <Container>
       <Header>
@@ -17,11 +32,11 @@ export const EnergyPrice = () => {
       <Footer>
         <FooterItem>
           <Text variant="caption" css={{ color: '$interface_dark_down' }}>Energia</Text>
-          <Text variant="paragraph">97,75 kWh</Text>
+          <Text variant="paragraph">{totalFormatted} kWh</Text>
         </FooterItem>
         <FooterItem last>
           <Text variant="caption" css={{ color: '$interface_dark_down' }}>Custo</Text>
-          <Text variant="paragraph">R$ 10,39</Text>
+          <Text variant="paragraph">{formatted}</Text>
         </FooterItem>
       </Footer>
     </Container>

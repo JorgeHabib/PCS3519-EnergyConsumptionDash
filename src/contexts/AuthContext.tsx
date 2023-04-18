@@ -1,6 +1,8 @@
 import { createContext, ReactNode, useEffect, useRef, useState } from 'react'
 import mqtt, { MqttClient } from 'mqtt'
 import React from 'react'
+import { api } from '@/services/api'
+import { useQuery } from 'react-query'
 
 type AuthContextData = {
   content: RawEnergyProps[]
@@ -106,65 +108,16 @@ interface RawEnergyMessage {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [content, setContent] = useState<RawEnergyProps[]>([])
-  const clientRef = useRef<MqttClient | null>(null)
+  const query = useQuery('content', async () => {
+    const response = await api.get<{ data: RawEnergyProps[] }>('/')
 
-  useEffect(() => {
-    console.log('running')
-    console.log('[MQTT] Attempting connection')
-
-    if (clientRef.current) {
-      clientRef.current.on('connect', () => {
-        console.log('[MQTT] Client connected to HOST')
-
-        clientRef.current?.subscribe(topic, (error) => {
-          if (error) {
-            console.log('Subscribe to topics error', error)
-            return
-          }
-        });
-      });
-
-      clientRef.current.on('error', (err) => {
-        console.error('Connection error: ', err);
-        clientRef.current?.end();
-      });
-
-      clientRef.current.on('message', (topic, payload: RawEnergyMessage) => {
-        console.log('Received Message:', topic)
-        console.log(JSON.parse(payload.toString()))
-
-        setContent((oldContent) => [...oldContent, {
-          ...JSON.parse(payload.toString()).DATA,
-          created_at: new Date()
-        }])
-      })
-    } else {
-      const newClient = mqtt.connect(connectUrl, {
-        keepalive: 30,
-        protocolId: 'MQTT',
-        protocolVersion: 4,
-        clean: true,
-        reconnectPeriod: 1000,
-        connectTimeout: 30 * 1000,
-        will: {
-          topic: 'WillMsg',
-          payload: 'Connection Closed abnormally..!',
-          qos: 0,
-          retain: false
-        },
-        rejectUnauthorized: false,
-        clientId,
-        username: 'automacao-2023',
-        password: 'auto835192',
-      })
-      
-      clientRef.current = newClient
-    }
-  }, []);
+    return response.data.data
+  }, {
+    refetchInterval: 10000,
+  })
 
   return (
-    <AuthContext.Provider value={{ content }}>
+    <AuthContext.Provider value={{ content: query.data || [] }}>
       {children}
     </AuthContext.Provider>
   )
