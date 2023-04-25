@@ -8,11 +8,6 @@
     "start": "next start",
     "lint": "next lint"
   },
-  "engines": {
-    "npm": ">6",
-    "yarn": "please-use-npm",
-    "node": "16"
-  },
   "dependencies": {
     "@heroicons/react": "^2.0.16",
     "@hookform/resolvers": "^2.9.11",
